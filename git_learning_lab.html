@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>아란님의 Git 타임머신 학습실 (10단계 반복 실습)</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #162032;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --green: #22c55e;
+    --green-bg: rgba(34, 197, 94, 0.14);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.15);
+    --yellow: #f59e0b;
+    --yellow-bg: rgba(245, 158, 11, 0.15);
+    --purple: #c084fc;
+    --purple-bg: rgba(192, 132, 252, 0.16);
+    --mono: 'Consolas', 'D2Coding', 'Courier New', monospace;
+    --sans: 'Malgun Gothic', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 18px;
+  }
+
+  .container {
+    max-width: 1360px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-title h1 {
+    font-size: 1.35rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-title p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .header-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge.accent { border-color: var(--accent); color: var(--accent); }
+  .badge.green { border-color: var(--green); color: var(--green); }
+  .badge.purple { border-color: var(--purple); color: var(--purple); }
+
+  .btn {
+    background: var(--accent);
+    color: #0b1120;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.86rem;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.15s, background 0.15s;
+    font-family: var(--sans);
+  }
+  .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.06); }
+  .btn-green { background: var(--green); color: #052e16; }
+  .btn-purple { background: var(--purple); color: #1e0536; }
+  .btn-yellow { background: var(--yellow); color: #271502; }
+  .btn-red { background: var(--red); color: #fff; }
+
+  /* Stepper Bar */
+  .stepper {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 6px;
+  }
+  .step-pill {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+  .step-pill:hover { border-color: var(--accent); color: var(--text); }
+  .step-pill .num { font-weight: 800; font-size: 0.85rem; display: block; }
+  .step-pill .lbl { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .step-pill.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .step-pill.done {
+    background: var(--green-bg);
+    border-color: var(--green);
+    color: #bbf7d0;
+  }
+
+  /* Main Grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1.25fr;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+
+  /* Mission Box */
+  .mission-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .concept-tag {
+    background: rgba(129, 140, 248, 0.18);
+    color: #c7d2fe;
+    border: 1px solid rgba(129, 140, 248, 0.4);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .mission-desc {
+    font-size: 0.93rem;
+    color: #f1f5f9;
+  }
+  .analogy-box {
+    background: var(--panel-2);
+    border-left: 3px solid var(--yellow);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #fde68a;
+  }
+  .action-area {
+    background: #0b1120;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .quick-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cmd-form {
+    display: flex;
+    gap: 8px;
+  }
+  .cmd-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 10px;
+    font-family: var(--mono);
+  }
+  .cmd-prompt {
+    color: var(--green);
+    font-weight: 700;
+    margin-right: 8px;
+    font-size: 0.88rem;
+  }
+  .cmd-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    padding: 9px 0;
+    outline: none;
+  }
+  .terminal-log {
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    max-height: 145px;
+    overflow-y: auto;
+    color: #cbd5e1;
+  }
+  .log-line { margin-bottom: 4px; }
+  .log-cmd { color: var(--accent); font-weight: 700; }
+  .log-ok { color: var(--green); }
+  .log-warn { color: var(--yellow); }
+  .log-err { color: var(--red); }
+
+  /* 4-Stage Pipeline */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .zone {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 128px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .zone.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.22);
+  }
+  .zone-header {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 5px;
+  }
+  .zone-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+  .file-chip {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .file-chip.modified { border-color: var(--yellow); color: #fde68a; }
+  .file-chip.staged { border-color: var(--green); color: #86efac; }
+  .file-chip.committed { border-color: var(--accent); color: #bae6fd; }
+  .file-chip.remote { border-color: var(--purple); color: #e9d5ff; }
+  .file-chip.bug { border-color: var(--red); color: #fca5a5; }
+  .empty-note {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+    margin: auto 0;
+  }
+
+  /* Code Diff Viewer */
+  .code-viewer {
+    background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .code-tabs {
+    background: #0f172a;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+  }
+  .code-filename {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .code-body {
+    padding: 10px 0;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    overflow-x: auto;
+    max-height: 255px;
+    overflow-y: auto;
+  }
+  .code-line {
+    display: flex;
+    padding: 2px 12px;
+    white-space: pre;
+  }
+  .code-line .ln {
+    width: 30px;
+    color: #475569;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .code-line .sign {
+    width: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .code-line.add { background: var(--green-bg); color: #bbf7d0; }
+  .code-line.add .sign { color: var(--green); }
+  .code-line.del { background: var(--red-bg); color: #fecaca; text-decoration: line-through; opacity: 0.85; }
+  .code-line.del .sign { color: var(--red); }
+
+  /* Commit Timeline Graph */
+  .timeline-wrap {
+    background: #0b1120;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .timeline-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .commit-node {
+    background: var(--panel);
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    min-width: 128px;
+  }
+  .commit-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+  }
+  .commit-node.branch-feat { border-color: var(--purple); }
+  .commit-node.bug-node { border-color: var(--red); }
+  .commit-node.selected { box-shadow: 0 0 0 2px #fff; }
+  .commit-hash {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .commit-msg {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2px;
+  }
+  .commit-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .tag-pill {
+    font-size: 0.66rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+  .tag-head { background: var(--yellow); color: #000; }
+  .tag-main { background: var(--accent); color: #000; }
+  .tag-feat { background: var(--purple); color: #000; }
+  .tag-remote { background: var(--green); color: #000; }
+
+  .arrow-sep {
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .step-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .complete-banner {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(56, 189, 248, 0.2));
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .complete-banner.show { display: flex; }
+
+  @media (max-width: 1020px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stepper { grid-template-columns: repeat(5, 1fr); }
+    .pipeline { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <h1>⏱️ 아란님의 Git 타임머신 학습실</h1>
+      <p>버전이 다른 실제 코드(v0.1 → v2.1)를 비교하며 10단계로 반복 체득하는 Git 시뮬레이터</p>
+    </div>
+    <div class="header-stats">
+      <span class="badge accent" id="branchBadge">🌿 현재 브랜치: main</span>
+      <span class="badge green" id="progressBadge">✅ 완료: 0 / 10</span>
+      <span class="badge purple" id="repeatBadge">🔁 완주 횟수: 0회</span>
+      <button class="btn btn-outline" onclick="resetAll(false)">🔄 처음부터 다시</button>
+    </div>
+  </div>
+
+  <!-- Completion Banner -->
+  <div class="complete-banner" id="completeBanner">
+    <div>
+      <strong style="font-size:1.05rem; color:#86efac;">🎉 축하합니다, 아란님! 10단계 1회독을 완주하셨습니다!</strong>
+      <div style="font-size:0.86rem; color:#e2e8f0; margin-top:2px;">
+        손에 익을 때까지 아래 버튼을 눌러 10번이고 계속 반복해 보세요. (현재 누적 완주: <span id="bannerCount">1</span>회)
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="startNextLoop()">🔁 다음 회독 바로 시작하기</button>
+  </div>
+
+  <!-- 10-Step Stepper -->
+  <div class="stepper" id="stepper"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-grid">
+    <!-- Left Column: Mission + Terminal -->
+    <div class="card">
+      <div class="card-title">
+        <span id="missionTitle">1단계. Git 창고 열기</span>
+        <span class="concept-tag" id="missionCmdTag">git init</span>
+      </div>
+
+      <div class="mission-desc" id="missionDesc"></div>
+      <div class="analogy-box" id="missionAnalogy"></div>
+
+      <div class="action-area">
+        <div style="font-size:0.8rem; color:var(--muted); font-weight:700;">
+          👇 버튼을 클릭하거나 아래 터미널에 직접 명령어를 입력해 보세요!
+        </div>
+        <div class="quick-btns" id="quickBtns"></div>
+
+        <form class="cmd-form" onsubmit="handleManualCmd(event)">
+          <div class="cmd-input-wrap">
+            <span class="cmd-prompt">$</span>
+            <input type="text" id="cmdInput" class="cmd-input" placeholder="예: git init (또는 위 버튼 클릭)" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn">실행</button>
+        </form>
+
+        <div class="terminal-log" id="terminalLog"></div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" id="prevBtn" onclick="goStep(currentStep - 1)">◀ 이전 단계</button>
+        <span style="font-size:0.82rem; color:var(--muted);" id="stepStatusText">미션을 실행하면 다음 단계로 이동할 수 있어요</span>
+        <button class="btn btn-green" id="nextBtn" onclick="goStep(currentStep + 1)">다음 단계 ▶</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Visual Pipeline + Diff + Timeline -->
+    <div class="card">
+      <div class="card-title">
+        <span>📦 Git 4단계 흐름 & 버전별 코드 비교</span>
+        <span style="font-size:0.78rem; color:var(--muted);" id="viewingLabel">현재 작업 파일 비교</span>
+      </div>
+
+      <!-- 4-Stage Pipeline -->
+      <div class="pipeline">
+        <div class="zone" id="zoneWorking">
+          <div class="zone-header">
+            <span>1. 작업 폴더</span>
+            <span class="zone-sub">Working</span>
+          </div>
+          <div id="workingList"></div>
+        </div>
+        <div class="zone" id="zoneStaging">
+          <div class="zone-header">
+            <span>2. 포장 상자</span>
+            <span class="zone-sub">Staging (add)</span>
+          </div>
+          <div id="stagingList"></div>
+        </div>
+        <div class="zone" id="zoneLocal">
+          <div class="zone-header">
+            <span>3. 내 PC 세이브</span>
+            <span class="zone-sub">Commit</span>
+          </div>
+          <div id="localList"></div>
+        </div>
+        <div class="zone" id="zoneRemote">
+          <div class="zone-header">
+            <span>4. GitHub 창고</span>
+            <span class="zone-sub">Remote (push)</span>
+          </div>
+          <div id="remoteList"></div>
+        </div>
+      </div>
+
+      <!-- Code Diff Viewer -->
+      <div class="code-viewer">
+        <div class="code-tabs">
+          <span class="code-filename" id="codeFilename">📄 app.py (v0.1)</span>
+          <span style="font-size:0.76rem; color:var(--muted);" id="diffLegend">
+            <span style="color:var(--red);">■ 삭제된 줄</span> &nbsp;
+            <span style="color:var(--green);">■ 추가된 줄</span>
+          </span>
+        </div>
+        <div class="code-body" id="codeBody"></div>
+      </div>
+
+      <!-- Commit Timeline -->
+      <div class="timeline-wrap">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:0.84rem; color:#e2e8f0;">🕒 세이브 타임라인 (커밋 노드를 클릭하면 그 시점의 코드를 봅니다!)</strong>
+          <span style="font-size:0.74rem; color:var(--muted);" id="commitCountLabel">세이브 0개</span>
+        </div>
+        <div class="timeline-list" id="timelineList">
+          <div class="empty-note" style="width:100%; padding:10px 0;">아직 세이브(commit)가 없습니다. 2단계에서 첫 세이브를 찍어보세요!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 실제 버전별 코드 스냅샷 (아란님이 버전 차이를 직관적으로 볼 수 있도록 구성)
+const CODE_VERSIONS = {
+  v01: [
+    '# 아란님의 스마트 인사 앱 (v0.1)',
+    'def greet():',
+    '    print("안녕하세요!")',
+    '',
+    'greet()'
+  ],
+  v11: [
+    '# 아란님의 스마트 인사 앱 (v1.1)',
+    'def greet(name="아란님"):',
+    '    print(f"안녕하세요, {name}!")',
+    '    print("오늘도 멋진 하루 보내세요.")',
+    '',
+    'greet()'
+  ],
+  v12: [
+    '# 아란님의 스마트 인사 앱 (v1.2)',
+    'import datetime',
+    '',
+    'def greet(name="아란님"):',
+    '    now = datetime.datetime.now().strftime("%H:%M")',
+    '    print(f"[{now}] 안녕하세요, {name}!")',
+    '    print("오늘도 멋진 하루 보내세요.")',
+    '',
+    'greet()'
+  ],
+  v20_beta: [
+    '# 아란님의 스마트 인사 앱 (v2.0-dark 실험판)',
+    'import datetime',
+    'THEME = "DARK_MODE"  # 🌙 다크모드 기능 추가!',
+    '',
+    'def greet(name="아란님"):',
+    '    now = datetime.datetime.now().strftime("%H:%M")',
+    '    print(f"[{THEME} | {now}] 안녕하세요, {name}!")',
+    '    print("눈이 편안한 다크모드가 켜졌습니다.")',
+    '',
+    'greet()'
+  ],
+  v21_bug: [
+    '# 아란님의 스마트 인사 앱 (v2.1 - 실수로 망가진 버전!)',
+    'import datetime',
+    'THEME = "DARK_MODE"',
+    '',
+    'def greet(name="아란님"):',
+    '    # 실수로 코드를 지우고 에러 코드를 넣어버림!!',
+    '    result = 10 / 0  # ❌ ZeroDivisionError 버그!',
+    '    print(result)',
+    '',
+    'greet()'
+  ],
+  v22_remote: [
+    '# 아란님의 스마트 인사 앱 (v2.2 - 노트북에서 기능 추가됨)',
+    'import datetime',
+    'THEME = "DARK_MODE"  # 🌙 다크모드 기능 추가!',
+    'VERSION = "2.2"      # 💻 노트북에서 버전 표시 추가!',
+    '',
+    'def greet(name="아란님"):',
+    '    now = datetime.datetime.now().strftime("%H:%M")',
+    '    print(f"[{THEME} | {now}] 안녕하세요, {name}!")',
+    '    print(f"현재 앱 버전: v{VERSION}")',
+    '',
+    'greet()'
+  ]
+};
+
+// 10단계 학습 미션 정의
+const STEPS = [
+  {
+    id: 1,
+    short: '창고 열기',
+    title: '1단계. Git 창고 만들기 (git init)',
+    cmdTag: 'git init',
+    desc: '현재 폴더에 <code>app.py (v0.1)</code> 파일이 있습니다. 아직은 일반 폴더여서 Git이 지켜보지 않아요. <strong>git init</strong>을 실행해 이 폴더를 Git 전용 창고(저장소)로 만들어 봅시다.',
+    analogy: '💡 비유: 게임에 "세이브 기능"을 켜는 첫 스위치입니다. 폴더 안에 숨겨진 .git 타임머신 장치가 생깁니다.',
+    actions: [
+      { label: 'git init (창고 열기)', cmd: 'git init', cls: 'btn' }
+    ],
+    expectedCmds: ['git init'],
+    setup: (s) => {
+      s.initialized = false;
+      s.branch = 'main';
+      s.working = [{ name: 'app.py', status: 'untracked', ver: 'v01' }];
+      s.staging = [];
+      s.commits = [];
+      s.remoteCommits = [];
+      s.prevCode = [];
+      s.currCode = CODE_VERSIONS.v01;
+      s.codeTitle = '📄 app.py (v0.1 — 최초 작성 코드)';
+      s.highlightZone = 'working';
+    },
+    onRun: (cmd, s) => {
+      s.initialized = true;
+      s.working = [{ name: 'app.py', status: 'modified', ver: 'v01' }];
+      s.highlightZone = 'working';
+      return { ok: true, msg: 'Initialized empty Git repository in d:/data/antigravity/github/.git/' };
+    }
+  },
+  {
+    id: 2,
+    short: '첫 세이브',
+    title: '2단계. 상자에 담고 첫 세이브 찍기 (add → commit)',
+    cmdTag: 'git add & commit',
+    desc: '이제 <code>app.py (v0.1)</code>을 첫 번째 세이브 포인트로 기록해 봅시다! 먼저 <strong>git add app.py</strong>로 포장 상자(Staging)에 넣고, 이어서 <strong>git commit</strong>으로 세이브를 확정하세요.',
+    analogy: '💡 비유: 택배 상자에 물건을 넣고(add) → 테이프로 닫고 송장 메모를 붙이는 것(commit)과 똑같습니다.',
+    actions: [
+      { label: '1) git add app.py (상자에 담기)', cmd: 'git add app.py', cls: 'btn btn-yellow' },
+      { label: '2) git commit -m "v1.0 최초 버전"', cmd: 'git commit -m "v1.0 최초 버전"', cls: 'btn btn-green' }
+    ],
+    expectedCmds: ['git add app.py', 'git commit'],
+    subStepsRequired: 2,
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [{ name: 'app.py (v0.1)', status: 'modified', ver: 'v01' }];
+      s.staging = [];
+      s.commits = [];
+      s.remoteCommits = [];
+      s.prevCode = [];
+      s.currCode = CODE_VERSIONS.v01;
+      s.codeTitle = '📄 app.py (v0.1 → 첫 세이브 대기)';
+      s.highlightZone = 'working';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.startsWith('git add')) {
+        s.staging = [{ name: 'app.py (v0.1)', status: 'staged', ver: 'v01' }];
+        s.working = [];
+        s.highlightZone = 'staging';
+        return { ok: true, done: false, msg: '📦 app.py가 포장 상자(Staging)에 담겼습니다! 이제 commit을 실행하세요.' };
+      }
+      if (cmd.startsWith('git commit')) {
+        if (s.staging.length === 0) {
+          return { ok: false, msg: '⚠️ 먼저 git add app.py 로 상자에 담아야 커밋할 수 있습니다!' };
+        }
+        s.staging = [];
+        s.commits = [{ id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' }];
+        s.highlightZone = 'local';
+        return { ok: true, done: true, msg: '[main a1b2c3] v1.0 최초 버전 — 첫 번째 세이브 포인트 생성 완료!' };
+      }
+      return { ok: false, msg: 'git add app.py 후 git commit 을 순서대로 실행해 보세요.' };
+    }
+  },
+  {
+    id: 3,
+    short: '버전 비교',
+    title: '3단계. 코드 수정 후 버전 차이(Diff) 보고 세이브 (v1.1)',
+    cmdTag: 'Diff → commit',
+    desc: '오른쪽 코드 화면을 보세요! <code>app.py</code>에 <strong>"아란님" 맞춤 인사말</strong>을 추가해 v1.1로 바꿨습니다. 빨간 줄(이전)과 초록 줄(새로 추가)의 차이를 확인한 뒤, <code>add</code> → <code>commit</code>으로 v1.1을 저장하세요.',
+    analogy: '💡 비유: Git은 파일 전체를 통째로 복사하는 게 아니라, 바뀐 줄(빨강/초록)만 똑똑하게 추적해서 보여줍니다.',
+    actions: [
+      { label: '1) git add . (변경된 파일 담기)', cmd: 'git add .', cls: 'btn btn-yellow' },
+      { label: '2) git commit -m "v1.1 아란님 인사 추가"', cmd: 'git commit -m "v1.1 아란님 인사 추가"', cls: 'btn btn-green' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [{ name: 'app.py (v1.1 수정됨)', status: 'modified', ver: 'v11' }];
+      s.staging = [];
+      s.commits = [{ id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' }];
+      s.remoteCommits = [];
+      s.prevCode = CODE_VERSIONS.v01;
+      s.currCode = CODE_VERSIONS.v11;
+      s.codeTitle = '📄 app.py (v1.0 → v1.1 변경 비교)';
+      s.highlightZone = 'working';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.startsWith('git add')) {
+        s.staging = [{ name: 'app.py (v1.1)', status: 'staged', ver: 'v11' }];
+        s.working = [];
+        s.highlightZone = 'staging';
+        return { ok: true, done: false, msg: '📦 변경된 app.py (v1.1)를 상자에 담았습니다. 이제 commit 해보세요!' };
+      }
+      if (cmd.startsWith('git commit')) {
+        if (s.staging.length === 0) return { ok: false, msg: '⚠️ 먼저 git add . 를 실행해 주세요!' };
+        s.staging = [];
+        s.commits.push({ id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' });
+        s.highlightZone = 'local';
+        return { ok: true, done: true, msg: '[main d4e5f6] v1.1 아란님 인사 추가 — 두 번째 세이브 완료!' };
+      }
+      return { ok: false, msg: 'git add . 후 git commit 을 실행해 주세요.' };
+    }
+  },
+  {
+    id: 4,
+    short: '골라 담기',
+    title: '4단계. 원하는 파일만 골라서 세이브하기 (부분 add)',
+    cmdTag: 'git add app.py',
+    desc: '작업 폴더에 <code>app.py (v1.2 시간 표시)</code>와 임시 메모장 <code>memo.txt</code> 두 파일이 있습니다. <strong>memo.txt는 빼고 app.py만</strong> 골라서 상자에 담고 커밋해 봅시다!',
+    analogy: '💡 비유: 포장 상자(Staging)가 따로 있는 이유! 지저분한 임시 메모는 빼고 깔끔한 코드만 골라서 세이브할 수 있습니다.',
+    actions: [
+      { label: '1) git add app.py (app.py만 선택)', cmd: 'git add app.py', cls: 'btn btn-yellow' },
+      { label: '2) git commit -m "v1.2 현재 시간 표시"', cmd: 'git commit -m "v1.2 현재 시간 표시"', cls: 'btn btn-green' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [
+        { name: 'app.py (v1.2 수정됨)', status: 'modified', ver: 'v12' },
+        { name: 'memo.txt (임시 메모)', status: 'modified', ver: 'v12' }
+      ];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' }
+      ];
+      s.remoteCommits = [];
+      s.prevCode = CODE_VERSIONS.v11;
+      s.currCode = CODE_VERSIONS.v12;
+      s.codeTitle = '📄 app.py (v1.1 → v1.2 시간 기능 추가)';
+      s.highlightZone = 'working';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.includes('add') && cmd.includes('app.py')) {
+        s.working = [{ name: 'memo.txt (작업폴더에 유지)', status: 'modified', ver: 'v12' }];
+        s.staging = [{ name: 'app.py (v1.2만 선택됨)', status: 'staged', ver: 'v12' }];
+        s.highlightZone = 'staging';
+        return { ok: true, done: false, msg: '✅ memo.txt는 남겨두고 app.py만 상자에 담았습니다! 이제 commit하세요.' };
+      }
+      if (cmd.startsWith('git commit')) {
+        if (s.staging.length === 0) return { ok: false, msg: '⚠️ 먼저 git add app.py 를 실행해 app.py만 담아주세요!' };
+        s.staging = [];
+        s.commits.push({ id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' });
+        s.highlightZone = 'local';
+        return { ok: true, done: true, msg: '[main 7a8b9c] v1.2 현재 시간 표시 — memo.txt는 제외하고 깔끔하게 저장됨!' };
+      }
+      return { ok: false, msg: 'git add app.py 를 실행해서 app.py만 골라 담아보세요.' };
+    }
+  },
+  {
+    id: 5,
+    short: '클라우드 백업',
+    title: '5단계. GitHub 클라우드로 올리기 (git push)',
+    cmdTag: 'git push',
+    desc: '지금까지 찍은 3개의 세이브(v1.0~v1.2)는 아직 <strong>내 PC에만</strong> 있습니다. PC가 고장 나도 안전하고 노트북에서도 이어서 작업할 수 있게 <strong>git push</strong>로 GitHub 창고에 올려봅시다!',
+    analogy: '💡 비유: 내 컴퓨터 게임 세이브 파일을 클라우드 서버에 백업 업로드하는 버튼입니다.',
+    actions: [
+      { label: 'git push origin main (GitHub에 업로드)', cmd: 'git push origin main', cls: 'btn btn-purple' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' }
+      ];
+      s.remoteCommits = [];
+      s.prevCode = CODE_VERSIONS.v12;
+      s.currCode = CODE_VERSIONS.v12;
+      s.codeTitle = '📄 app.py (v1.2 — GitHub 업로드 준비 완료)';
+      s.highlightZone = 'local';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.startsWith('git push')) {
+        s.remoteCommits = [...s.commits];
+        s.highlightZone = 'remote';
+        return { ok: true, done: true, msg: '☁️ To github.com/aran/smart-greet.git — 3개의 커밋이 GitHub에 안전하게 백업되었습니다!' };
+      }
+      return { ok: false, msg: 'git push origin main 을 입력하거나 버튼을 눌러주세요.' };
+    }
+  },
+  {
+    id: 6,
+    short: '브랜치 생성',
+    title: '6단계. 평행우주 실험실 만들기 (git checkout -b)',
+    cmdTag: 'git checkout -b',
+    desc: '잘 돌아가는 원본(<code>main</code>)을 건드리지 않고 <strong>다크모드 기능</strong>을 안전하게 실험하고 싶습니다. <code>feature/dark-mode</code>라는 새 브랜치(평행우주)를 만들고 이동해 보세요!',
+    analogy: '💡 비유: 원본 문서는 금고에 두고, 복사본을 하나 꺼내서 마음껏 낙서하고 실험하는 공간입니다.',
+    actions: [
+      { label: 'git checkout -b feature/dark-mode', cmd: 'git checkout -b feature/dark-mode', cls: 'btn btn-purple' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' }
+      ];
+      s.remoteCommits = [...s.commits];
+      s.prevCode = CODE_VERSIONS.v12;
+      s.currCode = CODE_VERSIONS.v12;
+      s.codeTitle = '📄 app.py (현재 브랜치: main)';
+      s.highlightZone = 'local';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.includes('checkout -b') || cmd.includes('switch -c') || cmd.includes('branch')) {
+        s.branch = 'feature/dark-mode';
+        s.codeTitle = '📄 app.py (현재 브랜치: feature/dark-mode 🌿)';
+        return { ok: true, done: true, msg: '🌿 Switched to a new branch \'feature/dark-mode\' — 이제 원본(main) 걱정 없이 실험할 수 있어요!' };
+      }
+      return { ok: false, msg: 'git checkout -b feature/dark-mode 를 실행해 보세요.' };
+    }
+  },
+  {
+    id: 7,
+    short: '실험 코딩',
+    title: '7단계. 새 브랜치에서 다른 버전 코딩 & 커밋 (v2.0-dark)',
+    cmdTag: '브랜치 커밋',
+    desc: '<code>feature/dark-mode</code> 브랜치에서 다크모드 코드(<code>THEME = "DARK_MODE"</code>)를 작성했습니다! 커밋해 보면 보라색 실험 브랜치에만 기록되고 <code>main</code> 원본은 v1.2 그대로 안전하게 남아있습니다.',
+    analogy: '💡 비유: 평행우주에서 신기술을 완성해 저장했습니다. 타임라인에서 v1.2와 v2.0-dark를 번갈아 클릭해 비교해 보세요!',
+    actions: [
+      { label: '1) git add app.py', cmd: 'git add app.py', cls: 'btn btn-yellow' },
+      { label: '2) git commit -m "v2.0-dark 다크모드 추가"', cmd: 'git commit -m "v2.0-dark 다크모드 추가"', cls: 'btn btn-purple' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'feature/dark-mode';
+      s.working = [{ name: 'app.py (v2.0-dark 실험중)', status: 'modified', ver: 'v20_beta' }];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' }
+      ];
+      s.remoteCommits = [...s.commits];
+      s.prevCode = CODE_VERSIONS.v12;
+      s.currCode = CODE_VERSIONS.v20_beta;
+      s.codeTitle = '📄 app.py (v1.2 → v2.0-dark 실험 버전)';
+      s.highlightZone = 'working';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.startsWith('git add')) {
+        s.working = [];
+        s.staging = [{ name: 'app.py (v2.0-dark)', status: 'staged', ver: 'v20_beta' }];
+        s.highlightZone = 'staging';
+        return { ok: true, done: false, msg: '📦 다크모드 코드를 상자에 담았습니다. 이제 커밋하세요!' };
+      }
+      if (cmd.startsWith('git commit')) {
+        if (s.staging.length === 0) return { ok: false, msg: '⚠️ 먼저 git add app.py 를 실행하세요.' };
+        s.staging = [];
+        s.commits.push({ id: 'f00d12', msg: 'v2.0-dark 다크모드 추가', branch: 'feature/dark-mode', ver: 'v20_beta' });
+        s.highlightZone = 'local';
+        return { ok: true, done: true, msg: '[feature/dark-mode f00d12] 다크모드 실험 버전 저장 완료! (main은 여전히 v1.2)' };
+      }
+      return { ok: false, msg: 'git add app.py 후 git commit 을 실행해 주세요.' };
+    }
+  },
+  {
+    id: 8,
+    short: '브랜치 합치기',
+    title: '8단계. 실험 성공! 원본에 합치기 (checkout → merge)',
+    cmdTag: 'git merge',
+    desc: '다크모드 실험이 완벽하게 성공했습니다! 이제 다시 원본 <code>main</code> 브랜치로 돌아간 뒤(<code>checkout main</code>), <code>git merge feature/dark-mode</code>로 새 기능을 원본에 합쳐 v2.0을 완성하세요.',
+    analogy: '💡 비유: 테스트가 끝난 부품을 본체에 정식으로 조립(합병)하는 단계입니다.',
+    actions: [
+      { label: '1) git checkout main (원본으로 이동)', cmd: 'git checkout main', cls: 'btn btn-yellow' },
+      { label: '2) git merge feature/dark-mode (합치기)', cmd: 'git merge feature/dark-mode', cls: 'btn btn-green' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'feature/dark-mode';
+      s.working = [];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' },
+        { id: 'f00d12', msg: 'v2.0-dark 다크모드 추가', branch: 'feature/dark-mode', ver: 'v20_beta' }
+      ];
+      s.remoteCommits = s.commits.slice(0, 3);
+      s.prevCode = CODE_VERSIONS.v12;
+      s.currCode = CODE_VERSIONS.v20_beta;
+      s.codeTitle = '📄 app.py (main으로 돌아가서 합치기 대기)';
+      s.highlightZone = 'local';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.includes('checkout main') || cmd.includes('switch main')) {
+        s.branch = 'main';
+        return { ok: true, done: false, msg: '🌿 main 브랜치로 돌아왔습니다! 이제 git merge feature/dark-mode 로 합쳐보세요.' };
+      }
+      if (cmd.startsWith('git merge')) {
+        if (s.branch !== 'main') return { ok: false, msg: '⚠️ 먼저 git checkout main 으로 원본 브랜치로 이동하세요!' };
+        s.commits.push({ id: '99aa11', msg: 'Merge v2.0 다크모드 정식 반영', branch: 'main', ver: 'v20_beta' });
+        s.codeTitle = '📄 app.py (v2.0 — main에 다크모드 정식 반영 완료!)';
+        return { ok: true, done: true, msg: '🎉 Fast-forward Merge 완료! 이제 main 원본도 다크모드(v2.0)를 갖게 되었습니다.' };
+      }
+      return { ok: false, msg: 'git checkout main 후 git merge feature/dark-mode 를 실행하세요.' };
+    }
+  },
+  {
+    id: 9,
+    short: '타임머신 복구',
+    title: '9단계. 대형 실수 발생! 1초 만에 과거로 되돌리기 (reset)',
+    cmdTag: 'git reset --hard',
+    desc: '앗! 코드를 고치다가 <code>10 / 0</code> 에러가 나는 버그 버전(<code>v2.1</code>)을 실수로 커밋해 버렸습니다! 😱 당황하지 말고 <strong>git reset --hard HEAD~1</strong>을 실행해 직전 정상 버전(v2.0)으로 타임머신을 돌려보세요!',
+    analogy: '💡 비유: 게임에서 보스에게 죽었을 때 직전 세이브 포인트로 깔끔하게 로드(불러오기)하는 마법입니다.',
+    actions: [
+      { label: 'git reset --hard HEAD~1 (직전 정상 버전으로 복구!)', cmd: 'git reset --hard HEAD~1', cls: 'btn btn-red' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [{ name: 'app.py (❌ 버그 상태)', status: 'bug', ver: 'v21_bug' }];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' },
+        { id: '99aa11', msg: 'v2.0 다크모드 정식 반영', branch: 'main', ver: 'v20_beta' },
+        { id: 'bad999', msg: 'v2.1 ❌ 실수 버그 커밋', branch: 'main', ver: 'v21_bug', bug: true }
+      ];
+      s.remoteCommits = s.commits.slice(0, 3);
+      s.prevCode = CODE_VERSIONS.v20_beta;
+      s.currCode = CODE_VERSIONS.v21_bug;
+      s.codeTitle = '📄 app.py (v2.1 — ❌ ZeroDivisionError 버그 발생!)';
+      s.highlightZone = 'local';
+    },
+    onRun: (cmd, s) => {
+      if (cmd.includes('reset')) {
+        s.commits.pop();
+        s.working = [];
+        s.prevCode = CODE_VERSIONS.v21_bug;
+        s.currCode = CODE_VERSIONS.v20_beta;
+        s.codeTitle = '📄 app.py (✅ v2.0 정상 버전으로 완벽 복구됨!)';
+        return { ok: true, done: true, msg: '⏱️ HEAD is now at 99aa11 (v2.0 다크모드 정식 반영) — 버그가 1초 만에 사라졌습니다!' };
+      }
+      return { ok: false, msg: 'git reset --hard HEAD~1 을 실행해 과거로 되돌려 보세요!' };
+    }
+  },
+  {
+    id: 10,
+    short: '동기화 완주',
+    title: '10단계. 다른 PC 작업 받아오고 최종 동기화 (pull → push)',
+    cmdTag: 'git pull & push',
+    desc: '마지막 단계입니다! 아란님이 노트북에서 <code>VERSION = "2.2"</code> 코드를 추가해 GitHub에 올려둔 상태예요. 먼저 <strong>git pull</strong>로 최신 코드를 내 데스크톱으로 내려받고, <strong>git push</strong>로 최종 동기화를 마쳐 보세요!',
+    analogy: '💡 비유: 데스크톱 ↔ GitHub ↔ 노트북이 언제나 똑같은 최신 코드를 공유하게 만드는 완성 단계입니다.',
+    actions: [
+      { label: '1) git pull origin main (최신 코드 받기)', cmd: 'git pull origin main', cls: 'btn btn-yellow' },
+      { label: '2) git push origin main (최종 동기화 완료)', cmd: 'git push origin main', cls: 'btn btn-green' }
+    ],
+    setup: (s) => {
+      s.initialized = true;
+      s.branch = 'main';
+      s.working = [];
+      s.staging = [];
+      s.commits = [
+        { id: 'a1b2c3', msg: 'v1.0 최초 버전', branch: 'main', ver: 'v01' },
+        { id: 'd4e5f6', msg: 'v1.1 아란님 인사 추가', branch: 'main', ver: 'v11' },
+        { id: '7a8b9c', msg: 'v1.2 현재 시간 표시', branch: 'main', ver: 'v12' },
+        { id: '99aa11', msg: 'v2.0 다크모드 정식 반영', branch: 'main', ver: 'v20_beta' }
+      ];
+      s.remoteCommits = [
+        ...s.commits,
+        { id: 'c0de22', msg: 'v2.2 💻 노트북에서 버전 표시 추가', branch: 'main', ver: 'v22_remote' }
+      ];
+      s.prevCode = CODE_VERSIONS.v20_beta;
+      s.currCode = CODE_VERSIONS.v20_beta;
+      s.codeTitle = '📄 app.py (GitHub에 v2.2 새 커밋이 기다리고 있음!)';
+      s.highlightZone = 'remote';
+      s.pulled = false;
+    },
+    onRun: (cmd, s) => {
+      if (cmd.startsWith('git pull')) {
+        s.pulled = true;
+        s.commits = [...s.remoteCommits];
+        s.prevCode = CODE_VERSIONS.v20_beta;
+        s.currCode = CODE_VERSIONS.v22_remote;
+        s.codeTitle = '📄 app.py (v2.0 → v2.2 노트북 작업분 다운로드 완료!)';
+        s.highlightZone = 'local';
+        return { ok: true, done: false, msg: '⬇️ GitHub에서 노트북이 올린 v2.2 코드를 성공적으로 내려받았습니다! 이제 마지막 push를 해보세요.' };
+      }
+      if (cmd.startsWith('git push')) {
+        if (!s.pulled) return { ok: false, msg: '⚠️ GitHub에 더 최신 코드가 있어요! 먼저 git pull origin main 으로 내려받으세요.' };
+        s.highlightZone = 'remote';
+        return { ok: true, done: true, msg: '🏆 Everything up-to-date! 내 PC와 GitHub가 v2.2로 완벽하게 동기화되었습니다!' };
+      }
+      return { ok: false, msg: 'git pull origin main 후 git push origin main 을 실행해 주세요.' };
+    }
+  }
+];
+
+// 전역 상태
+let currentStep = 0; // 0 ~ 9
+let completedSteps = new Set();
+let repeatCount = parseInt(localStorage.getItem('aran_git_repeat_count') || '0', 10);
+let state = {};
+let logs = [];
+let selectedCommitIdx = null;
+
+function init() {
+  loadStep(0);
+}
+
+function loadStep(idx) {
+  if (idx < 0 || idx >= STEPS.length) return;
+  currentStep = idx;
+  selectedCommitIdx = null;
+  state = {};
+  STEPS[idx].setup(state);
+  logs = [{ type: 'warn', text: `📌 ${STEPS[idx].title} 준비 완료.` }];
+  renderAll();
+}
+
+function runCommand(rawCmd) {
+  const cmd = rawCmd.trim();
+  if (!cmd) return;
+  logs.push({ type: 'cmd', text: `$ ${cmd}` });
+
+  const step = STEPS[currentStep];
+  const res = step.onRun(cmd, state);
+  selectedCommitIdx = null;
+
+  if (res.ok) {
+    logs.push({ type: 'ok', text: res.msg });
+    const isStepDone = res.done !== undefined ? res.done : true;
+    if (isStepDone) {
+      completedSteps.add(step.id);
+      checkLoopCompletion();
+    }
+  } else {
+    logs.push({ type: 'err', text: res.msg });
+  }
+  renderAll();
+}
+
+function checkLoopCompletion() {
+  if (completedSteps.size === STEPS.length) {
+    const banner = document.getElementById('completeBanner');
+    if (!banner.classList.contains('show')) {
+      repeatCount += 1;
+      localStorage.setItem('aran_git_repeat_count', String(repeatCount));
+      document.getElementById('bannerCount').textContent = repeatCount;
+      banner.classList.add('show');
+    }
+  }
+}
+
+function startNextLoop() {
+  completedSteps.clear();
+  document.getElementById('completeBanner').classList.remove('show');
+  loadStep(0);
+}
+
+function resetAll(clearCount) {
+  completedSteps.clear();
+  if (clearCount) {
+    repeatCount = 0;
+    localStorage.setItem('aran_git_repeat_count', '0');
+  }
+  document.getElementById('completeBanner').classList.remove('show');
+  loadStep(0);
+}
+
+function goStep(idx) {
+  if (idx >= 0 && idx < STEPS.length) {
+    loadStep(idx);
+  }
+}
+
+function handleManualCmd(e) {
+  e.preventDefault();
+  const input = document.getElementById('cmdInput');
+  runCommand(input.value);
+  input.value = '';
+}
+
+function inspectCommit(idx) {
+  selectedCommitIdx = idx;
+  renderAll();
+}
+
+// 간단한 줄 단위 Diff 계산
+function computeDiff(oldLines, newLines) {
+  const result = [];
+  const oldSet = new Set(oldLines);
+  const newSet = new Set(newLines);
+
+  if (!oldLines || oldLines.length === 0) {
+    newLines.forEach((line, i) => result.push({ type: 'add', ln: i + 1, text: line }));
+    return result;
+  }
+
+  let ln = 1;
+  // 삭제된 줄 먼저 보여주고 유지/추가 줄 표시 (직관적 학습용)
+  const maxLen = Math.max(oldLines.length, newLines.length);
+  const shownOld = new Set();
+
+  newLines.forEach((line, i) => {
+    if (oldLines[i] !== undefined && oldLines[i] !== line && !newSet.has(oldLines[i]) && !shownOld.has(i)) {
+      result.push({ type: 'del', ln: '-', text: oldLines[i] });
+      shownOld.add(i);
+    }
+    if (!oldSet.has(line)) {
+      result.push({ type: 'add', ln: ln++, text: line });
+    } else {
+      result.push({ type: 'same', ln: ln++, text: line });
+    }
+  });
+
+  // 남은 삭제 줄
+  oldLines.forEach((line, i) => {
+    if (!newSet.has(line) && !shownOld.has(i)) {
+      result.push({ type: 'del', ln: '-', text: line });
+    }
+  });
+
+  return result;
+}
+
+function renderAll() {
+  const step = STEPS[currentStep];
+
+  // Header Badges
+  document.getElementById('branchBadge').textContent = `🌿 현재 브랜치: ${state.branch}`;
+  document.getElementById('progressBadge').textContent = `✅ 완료: ${completedSteps.size} / ${STEPS.length}`;
+  document.getElementById('repeatBadge').textContent = `🔁 완주 횟수: ${repeatCount}회`;
+
+  // Stepper
+  const stepperEl = document.getElementById('stepper');
+  stepperEl.innerHTML = STEPS.map((st, idx) => {
+    const isActive = idx === currentStep;
+    const isDone = completedSteps.has(st.id);
+    return `
+      <div class="step-pill ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}" onclick="goStep(${idx})">
+        <span class="num">${isDone ? '✓ ' : ''}${st.id}단계</span>
+        <span class="lbl">${st.short}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Mission Card
+  document.getElementById('missionTitle').textContent = step.title;
+  document.getElementById('missionCmdTag').textContent = step.cmdTag;
+  document.getElementById('missionDesc').innerHTML = step.desc;
+  document.getElementById('missionAnalogy').textContent = step.analogy;
+
+  // Quick Buttons
+  document.getElementById('quickBtns').innerHTML = step.actions.map(act => `
+    <button class="${act.cls}" onclick='runCommand(${JSON.stringify(act.cmd)})'>▶ ${act.label}</button>
+  `).join('');
+
+  // Terminal Logs
+  const logEl = document.getElementById('terminalLog');
+  logEl.innerHTML = logs.map(l => `<div class="log-line log-${l.type}">${escapeHtml(l.text)}</div>`).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+
+  // Nav Buttons
+  document.getElementById('prevBtn').disabled = currentStep === 0;
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.disabled = currentStep === STEPS.length - 1;
+  const isDoneNow = completedSteps.has(step.id);
+  document.getElementById('stepStatusText').textContent = isDoneNow
+    ? '✅ 이 단계를 완료했습니다! 다음 단계로 넘어가세요.'
+    : '👆 위 버튼이나 명령어를 실행해 미션을 완료해 보세요.';
+
+  // 4-Stage Zones
+  ['Working', 'Staging', 'Local', 'Remote'].forEach(z => {
+    const el = document.getElementById('zone' + z);
+    el.classList.toggle('highlight', state.highlightZone === z.toLowerCase());
+  });
+
+  renderZoneList('workingList', state.working, '수정된 파일 없음');
+  renderZoneList('stagingList', state.staging, '상자 비어 있음');
+
+  const localEl = document.getElementById('localList');
+  if (state.commits.length === 0) {
+    localEl.innerHTML = '<div class="empty-note">세이브 없음</div>';
+  } else {
+    const latest = state.commits[state.commits.length - 1];
+    localEl.innerHTML = `
+      <div class="file-chip ${latest.bug ? 'bug' : 'committed'}">
+        <span>${latest.id}</span>
+        <span>${state.commits.length}개</span>
+      </div>
+      <div style="font-size:0.72rem; color:var(--muted); margin-top:2px;">최신: ${latest.msg}</div>
+    `;
+  }
+
+  const remoteEl = document.getElementById('remoteList');
+  if (state.remoteCommits.length === 0) {
+    remoteEl.innerHTML = '<div class="empty-note">아직 업로드 안 됨</div>';
+  } else {
+    const rLatest = state.remoteCommits[state.remoteCommits.length - 1];
+    remoteEl.innerHTML = `
+      <div class="file-chip remote">
+        <span>☁️ ${rLatest.id}</span>
+        <span>${state.remoteCommits.length}개</span>
+      </div>
+      <div style="font-size:0.72rem; color:var(--muted); margin-top:2px;">최신: ${rLatest.msg}</div>
+    `;
+  }
+
+  // Code Viewer (커밋 노드를 클릭했으면 그 커밋의 코드 표시, 아니면 현재 단계 Diff 표시)
+  let diffLines = [];
+  if (selectedCommitIdx !== null && state.commits[selectedCommitIdx]) {
+    const c = state.commits[selectedCommitIdx];
+    const prevC = selectedCommitIdx > 0 ? state.commits[selectedCommitIdx - 1] : null;
+    const oldLines = prevC ? CODE_VERSIONS[prevC.ver] : [];
+    const newLines = CODE_VERSIONS[c.ver];
+    diffLines = computeDiff(oldLines, newLines);
+    document.getElementById('codeFilename').textContent = `🕒 타임머신 미리보기: [${c.id}] ${c.msg}`;
+    document.getElementById('viewingLabel').textContent = '과거 세이브 시점 조회 중';
+  } else {
+    diffLines = computeDiff(state.prevCode, state.currCode);
+    document.getElementById('codeFilename').textContent = state.codeTitle;
+    document.getElementById('viewingLabel').textContent = '현재 작업 버전 비교';
+  }
+
+  document.getElementById('codeBody').innerHTML = diffLines.map(d => {
+    const sign = d.type === 'add' ? '+' : d.type === 'del' ? '-' : ' ';
+    return `
+      <div class="code-line ${d.type}">
+        <span class="ln">${d.ln}</span>
+        <span class="sign">${sign}</span>
+        <span>${escapeHtml(d.text)}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Timeline
+  const timelineEl = document.getElementById('timelineList');
+  document.getElementById('commitCountLabel').textContent = `세이브 ${state.commits.length}개`;
+  if (state.commits.length === 0) {
+    timelineEl.innerHTML = '<div class="empty-note" style="width:100%; padding:10px 0;">아직 세이브(commit)가 없습니다. 2단계에서 첫 세이브를 찍어보세요!</div>';
+  } else {
+    const remoteIds = new Set(state.remoteCommits.map(r => r.id));
+    timelineEl.innerHTML = state.commits.map((c, i) => {
+      const isHead = i === state.commits.length - 1;
+      const isFeat = c.branch !== 'main';
+      const isRemote = remoteIds.has(c.id);
+      const isSel = selectedCommitIdx === i;
+      return `
+        ${i > 0 ? '<span class="arrow-sep">→</span>' : ''}
+        <div class="commit-node ${isFeat ? 'branch-feat' : ''} ${c.bug ? 'bug-node' : ''} ${isSel ? 'selected' : ''}" onclick="inspectCommit(${i})">
+          <div class="commit-hash">
+            <span>#${c.id}</span>
+            <span>${c.branch}</span>
+          </div>
+          <div class="commit-msg">${escapeHtml(c.msg)}</div>
+          <div class="commit-tags">
+            ${isHead ? '<span class="tag-pill tag-head">HEAD</span>' : ''}
+            ${isFeat ? '<span class="tag-pill tag-feat">branch</span>' : '<span class="tag-pill tag-main">main</span>'}
+            ${isRemote ? '<span class="tag-pill tag-remote">GitHub</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function renderZoneList(elId, items, emptyText) {
+  const el = document.getElementById(elId);
+  if (!items || items.length === 0) {
+    el.innerHTML = `<div class="empty-note">${emptyText}</div>`;
+    return;
+  }
+  el.innerHTML = items.map(item => `
+    <div class="file-chip ${item.status}">
+      <span>📄 ${escapeHtml(item.name)}</span>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+init();
+</script>
+</body>
+</html>
